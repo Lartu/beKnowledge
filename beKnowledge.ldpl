@@ -1,0 +1,123 @@
+data:
+fileContents is text
+i is number
+speed is number
+auxNumber is number
+wordLength is number #Assuming the longest word is 20 characters wide
+percent is number
+hasPausedOnStart is number
+pages is number
+
+procedure:
+if argc is less than 1 then
+    display "\033[1;31mError\033[0m: no text file specified." crlf
+    display "Usage: $ beKnowledge <text file name>" crlf
+    exit
+end if
+if argc is greater than 1 then
+    display "\033[1;31mError\033[0m: too many arguments passed." crlf
+    display "Usage: $ beKnowledge <text file name>" crlf
+    exit
+end if
+
+execute "clear"
+display crlf "                     +-----------------------------------+" crlf
+display "                     |            \033[1;31mbeKnowledge\033[0m            |" crlf 
+display "                     |   \033[0;37mgithub.com/lartu/beKnowledge/   |" crlf
+display "                     | by Martín del Río (www.lartu.net)\033[0m |" crlf 
+display "                     +-----------------------------------+" crlf crlf
+
+# Load text.txt
+display "- (1/4) Loading " argv:0 "..."
+load file argv:0 in fileContents
+store length of fileContents in wordLength
+if file-loaded is equal to 0 then
+	display crlf
+    display "\033[1;31mError\033[0m: the file '" argv:0 "' was empty or not found." crlf
+    exit
+else
+    display " \033[1;32mOK\033[0m" crlf
+end if
+
+# Remove line breaks
+display "- (2/4) Splitting lines (this may take some time)..."
+store "\n" in explode/separator
+store fileContents in explode/string
+call sub-procedure explode
+display " \033[1;32mOK\033[0m" crlf
+display "- (3/4) Joining lines..."
+
+store "" in fileContents
+store 0 in i
+while i is less than or equal to explode/length do
+    in fileContents join fileContents explode/words:i " "
+    add 1 and i in i
+repeat
+display " \033[1;32mOK\033[0m" crlf
+
+# Explode text into words and print them
+display "- (4/4) Splitting words (this may take some time)... "
+store " " in explode/separator
+store fileContents in explode/string
+call sub-procedure explode
+display " \033[1;32mOK\033[0m" crlf
+
+display crlf "Choose your reading speed (milliseconds per word) (default 100): "
+accept speed
+
+display crlf "This file has \033[1;35m" explode/length " words\033[0m. From which word would you like to start?" crlf 
+display "(enter 0 if you'd like to start from the first word): "
+accept i
+store "" in fileContents
+while i is less than or equal to explode/length do
+    if explode/words:i is not equal to "" then
+        execute "clear"
+        multiply i by 100 in percent
+        divide percent by explode/length in percent
+        floor percent
+        divide i by 280 in pages #Average of 280 words per page in a normal book
+        floor pages
+        display "\033[0;36mWord count " i "/" explode/length " (" percent "%) You've read " pages " average book pages.\033[0m"
+        # Print line breaks
+        display crlf crlf crlf crlf crlf crlf crlf crlf crlf crlf "                               "
+        # Print spaces so all words appear centered on the same point
+        store length of explode/words:i in wordLength
+        divide wordLength by 2 in wordLength
+        if wordLength is greater than 10 then
+            store 10 in wordLength
+        end if
+        subtract wordLength from 10 in wordLength
+        while wordLength is greater than 0 do
+            display " "
+            subtract 1 from wordLength in wordLength
+        repeat
+        # Display word and wait
+        display explode/words:i crlf
+        wait speed milliseconds
+    end if
+
+    # Pause speed x 10 every 50 words
+    modulo i by 50 in auxNumber
+    if auxNumber is equal to 0 then
+        store 9 in auxNumber
+        while auxNumber is greater than 0 do
+            wait speed milliseconds
+            subtract 1 from auxNumber in auxNumber
+        repeat
+    end if
+
+    # Every 1000 words ask for input before continuing.
+    if hasPausedOnStart is equal to 1 then
+        modulo i by 1000 in auxNumber
+        if auxNumber is equal to 0 then
+            display crlf crlf "\033[1;34mYou've read " i " words. Press ENTER to continue.\033[0m"
+            accept fileContents
+        end if
+    else
+        display crlf crlf "\033[1;34mPress ENTER to start. You'll be given time to blink every 50 words" crlf
+        display "and a pause every 1000 words.\033[0m"
+        accept fileContents
+        store 1 in hasPausedOnStart
+    end if
+    add 1 and i in i
+repeat
