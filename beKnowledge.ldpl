@@ -35,7 +35,7 @@ display "                     +-----------------------------------+" crlf crlf
 display "- (1/4) Loading " argv:0 "..."
 load file argv:0 in fileContents
 store length of fileContents in wordLength
-if file-loaded is equal to 0 then
+if errorcode is not equal to 0 then
 	display crlf
     display "\033[1;31mError\033[0m: the file '" argv:0 "' was empty or not found." crlf
     exit
